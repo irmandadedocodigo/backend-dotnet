@@ -5,7 +5,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DB_CONNECTION_STRING": "Server=127.0.0.1;Port=15432;Database=irmandade;User Id=postgres;Password=password;"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5203"
@@ -15,7 +16,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DB_CONNECTION_STRING": "Server=127.0.0.1;Port=15432;Database=irmandade;User Id=postgres;Password=password;"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7290;http://localhost:5203"
@@ -25,7 +27,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DB_CONNECTION_STRING": "Server=127.0.0.1;Port=15432;Database=irmandade;User Id=postgres;Password=password;"
       }
     },
     "Container (Dockerfile)": {
@@ -34,7 +37,8 @@
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
       "environmentVariables": {
         "ASPNETCORE_HTTPS_PORTS": "8081",
-        "ASPNETCORE_HTTP_PORTS": "8080"
+        "ASPNETCORE_HTTP_PORTS": "8080",
+        "DB_CONNECTION_STRING": "Server=127.0.0.1;Port=15432;Database=irmandade;User Id=postgres;Password=password;"
       },
       "publishAllPorts": true,
       "useSSL": true

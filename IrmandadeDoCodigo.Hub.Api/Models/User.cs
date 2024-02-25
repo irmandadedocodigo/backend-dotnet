@@ -1,14 +1,23 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace IrmandadeDoCodigo.Hub.Api.Models
 {
+    [Table("Users")]
+    [Index(nameof(Id))]
+    [Index(nameof(Email), IsUnique = true)]
     public class User
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
+        [Key]
+        public Guid Id { get; set; }
+        [Required]
+        public required string Name { get; set; }
+        [Required]
+        public required string Email { get; set; }
         [JsonIgnore]
-        public string PasswordHash { get; set; }
-        public IList<Role> Roles { get; set; }
+        public required string PasswordHash { get; set; }
+        public List<Role> Roles { get; set; } = [];
     }
 }

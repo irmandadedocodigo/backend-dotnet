@@ -1,5 +1,6 @@
 using IrmandadeDoCodigo.Hub.Api;
 using IrmandadeDoCodigo.Hub.Api.Data;
+using IrmandadeDoCodigo.Hub.Api.Repositories;
 using IrmandadeDoCodigo.Hub.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -46,10 +47,12 @@ builder.Services.AddAuthorization(options =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDataContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AppDataContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddTransient<TokenService>();
+builder.Services.AddTransient<UserService>();
+builder.Services.AddTransient<UserRepository>();
 
 var app = builder.Build();
 

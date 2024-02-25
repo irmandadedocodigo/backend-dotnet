@@ -1,6 +1,4 @@
-﻿using IrmandadeDoCodigo.Hub.Api.Data;
-using IrmandadeDoCodigo.Hub.Api.Extensions;
-using IrmandadeDoCodigo.Hub.Api.Models;
+﻿using IrmandadeDoCodigo.Hub.Api.Extensions;
 using IrmandadeDoCodigo.Hub.Api.Services;
 using IrmandadeDoCodigo.Hub.Api.ViewModels;
 using IrmandadeDoCodigo.Hub.Api.ViewModels.Account;
@@ -11,37 +9,20 @@ using Microsoft.EntityFrameworkCore;
 namespace IrmandadeDoCodigo.Hub.Api.Controllers
 {
     [ApiController]
-    public class AccountController : ControllerBase
+    public class AccountController(UserService userService, TokenService tokenService, EmailService emailService) : ControllerBase
     {
 
         [HttpPost("v1/account/")]
-        public async Task<IActionResult> Post(
-            [FromBody] RegisterViewModel model,
-            [FromServices] TokenService tokenService,
-            [FromServices] AppDataContext context,
-            [FromServices] EmailService emailService
+        public async Task<IActionResult> CreateUser(
+            [FromBody] RegisterViewModel model
         )
         {
             if (!ModelState.IsValid) return BadRequest(new ResultViewModel<string>(ModelState.GetErrors()));
-            var user = new User()
-            {
-                Name = model.Name,
-                Email = model.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password)
-            };
-
-
             try
             {
-                context.Users.Add(user);
-                await context.SaveChangesAsync();
-
+                var user = await userService.Create(model);
                 emailService.Send(user.Name, user.Email, "Bem vindo à Irmandade!", $" Sua senha é <strong>{model.Password}</strong>");
-
-                return Ok(new ResultViewModel<dynamic>(new
-                {
-                    user.Email,
-                }));
+                return Created($"/v1/account/{user.Id}/profile", new ResultViewModel<dynamic>(new { user.Id, user.Email, }));
             }
             catch (DbUpdateException ex)
             {
@@ -51,28 +32,16 @@ namespace IrmandadeDoCodigo.Hub.Api.Controllers
             {
                 return StatusCode(500, new ResultViewModel<string>("E002 - Falha interna no servidor."));
             }
-
         }
 
         [HttpPost("v1/account/login")]
         public async Task<IActionResult> Login(
-            [FromBody] LoginViewModel model,
-            [FromServices] AppDataContext context,
-            [FromServices] TokenService tokenService)
+           [FromBody] LoginViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(new ResultViewModel<string>(ModelState.GetErrors()));
-
-            var user = await context
-                .Users
-                .AsNoTracking()
-                .Include(user => user.Roles)
-                .FirstOrDefaultAsync(x => x.Email == model.Email);
-
-            if (user == null)
-                return Unauthorized(new ResultViewModel<string>("Usuário ou senha inválidos"));
-
-            if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
-                return Unauthorized(new ResultViewModel<string>("Usuário ou senha inválidos"));
+            var user = await userService.FindByEmail(model.Email);
+            if (user is null) return Unauthorized(new ResultViewModel<string>("Usuário ou senha inválidos"));
+            if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash)) return Unauthorized(new ResultViewModel<string>("Usuário ou senha inválidos"));
 
             try
             {
@@ -85,14 +54,28 @@ namespace IrmandadeDoCodigo.Hub.Api.Controllers
             }
         }
 
+        [Authorize(Roles = "user")]
+        [HttpGet("v1/account/profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            try
+            {
+                var user = await userService.FindProfile(User.Identity.Name);
+                return Ok(new ResultViewModel<dynamic>(new { user.Name, user.Id, user.Email }));
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest(new ResultViewModel<string>("Este email já está cadastrado."));
+            }
+            catch
+            {
+                return StatusCode(500, new ResultViewModel<string>("E002 - Falha interna no servidor."));
+            }
+        }
 
         [Authorize(Roles = "user")]
         [HttpGet("v1/user")]
         public IActionResult GetUser() => Ok(User.Identity.Name);
-
-        [Authorize(Roles = "author")]
-        [HttpGet("v1/author")]
-        public IActionResult GetAuthor() => Ok(User.Identity.Name);
 
         [Authorize(Roles = "admin")]
         [HttpGet("v1/admin")]
